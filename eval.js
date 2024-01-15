@@ -17,8 +17,37 @@ function isVar(token) {
     return (token !== undefined) && (token.match(regex) !== null);
 }
 
+function isFloatOrVar(token) {
+    return (isFloat(token) || isVar(token));
+}
+
+// Insert '*' token for implicit multiplication
+function insertImpliedMul(tokens) {
+    let updatedTokens = [];
+    for (let i = 0; i < tokens.length - 1; i++) {
+        let current = tokens[i];
+        let next = tokens[i + 1];
+        updatedTokens.push(current);
+
+        if (isFloatOrVar(current) && next === '(') {
+            updatedTokens.push('*');
+        }
+        if (current === ')' && isFloatOrVar(next)) {
+            updatedTokens.push('*');
+        }
+        if (current === ')' && next === '(') {
+            updatedTokens.push('*');
+        }
+    }
+    // Unable to loop last token as i+1 will be out of range
+    updatedTokens.push(tokens.pop());
+    return updatedTokens;
+}
+
 function parse(code) {
     let tokens = tokenise(code);
+    tokens = insertImpliedMul(tokens);
+    console.log(tokens);
     let position = 0;
 
     // Get the next token without moving position
@@ -41,12 +70,8 @@ function parse(code) {
             consume(t);
             return { type: "Float", value: t };
         } else if (t === '+' || t === '-') {
-            // consume(t);
+            // Parse expressions prefix with + or -
             let expr = parseUnaryExpr();
-            // let next = peakNext();
-            // if (next === '*' ||  next === '/') {
-            //     throw new SyntaxError(`Unexpected '${next}'`);
-            // }
             return expr;
         } else if (isVar(t)) {
             consume(t);
@@ -118,6 +143,7 @@ function parse(code) {
     return result;
 }
 
-const code = "(1+2)3";
+const code = "1(2)+ (3)(4)";
+// const code = "1(2+3)";
 const parsedTree = parse(code);
 console.log(parsedTree);
