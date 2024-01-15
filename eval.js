@@ -40,17 +40,15 @@ function parse(code) {
         if (isFloat(t)) {
             consume(t);
             return { type: "Float", value: t };
-        } 
-        // else if (t === '+' || t === '-') {
-        //     consume(t);
-        //     let expr = parseNegateExpr();
-        //     // let next = peakNext();
-        //     // if (next === '*' ||  next === '/') {
-        //     //     throw new SyntaxError(`Unexpected '${next}'`);
-        //     // }
-        //     return expr;
-        // } 
-        else if (isVar(t)) {
+        } else if (t === '+' || t === '-') {
+            // consume(t);
+            let expr = parseUnaryExpr();
+            // let next = peakNext();
+            // if (next === '*' ||  next === '/') {
+            //     throw new SyntaxError(`Unexpected '${next}'`);
+            // }
+            return expr;
+        } else if (isVar(t)) {
             consume(t);
             return { type: "Variable", id: t };
         } else if (t === '(') {
@@ -67,19 +65,28 @@ function parse(code) {
         }
     }
 
-    // // NegateExpr parses (+- PrimaryExpr)
-    // function parseNegateExpr() {
-    //     let expr = parsePrimaryExpr();
-    //     let t = peekNext();
-    //     // while allows chaining (- - ... +- expr)
-    // }
+    // UnaryExpr parses (+- PrimaryExpr)
+    function parseUnaryExpr() {
+        // let expr = parsePrimaryExpr();
+        let negateCount = 0;
+        let t = peekNext();
+        // while allows chaining (+- ... - expr)
+        while (t === '+' || t === '-') {
+            if (t === '-') negateCount++;
+            consume(t);
+            t = peekNext();
+        }
+        const sign = ((negateCount % 2) === 0) ? 1 : -1;
+        let expr = parsePrimaryExpr();
+        return { sign, expr }
+    }
 
     // MulExpr parses (PrimaryExpr */ PrimaryExpr)
     function parseMulExpr() {
         let expr = parsePrimaryExpr();
         let t = peekNext();
         // while allows chaining (expr * expr * expr ...)
-        while ((t === '*' || t === '/')) {
+        while (t === '*' || t === '/') {
             consume(t);
             let rhs = parsePrimaryExpr();
             expr = { type: t, left: expr, right: rhs };
@@ -94,7 +101,7 @@ function parse(code) {
         let expr = parseMulExpr();
         let t = peekNext();
         // while allows chaining (expr + expr + expr ...)
-        while ((t === '+' || t === '-')) {
+        while (t === '+' || t === '-') {
             consume(t);
             let rhs = parseMulExpr();
             expr = { type: t, left: expr, right: rhs };
@@ -106,11 +113,11 @@ function parse(code) {
     let result = parseAddExpr();
     // Ensure that the position reaches the last token
     if (position !== tokens.length) {
-        throw new SyntaxError("Unexpected '" + peek() + "'");
+        throw new SyntaxError(`Unexpected '${peekNext()}' after ${position}`);
     }
     return result;
 }
 
-const code = "((1+2))+3";
+const code = "(1+2)3";
 const parsedTree = parse(code);
 console.log(parsedTree);
