@@ -4,6 +4,8 @@ const assert = require('node:assert');
 function tokenise(expr) {
     const regex = /[A-Za-z]+|([0-9]*[.])?[0-9]+|\S/g;
     let tokens = expr.match(regex);
+    tokens = insertCloseBrackets(tokens);
+    tokens = insertImpliedMul(tokens);
     return tokens;
 }
 
@@ -44,9 +46,27 @@ function insertImpliedMul(tokens) {
     return updatedTokens;
 }
 
+function insertCloseBrackets(tokens) {
+    let openCount = 0;
+    tokens.forEach(token => {
+        if (token === '(') {
+            openCount++;
+        } else if (token === ')') {
+            openCount--;
+        }
+    });
+    if (openCount < 0) {
+        throw new SyntaxError("Missing open brackets");
+    }
+    while (openCount > 0) {
+        tokens.push(')');
+        openCount--;
+    }
+    return tokens;
+}
+
 function parse(code) {
     let tokens = tokenise(code);
-    tokens = insertImpliedMul(tokens);
     console.log(tokens);
     let position = 0;
 
@@ -143,7 +163,7 @@ function parse(code) {
     return result;
 }
 
-const code = "1(2)+ (3)(4)";
+const code = "1(2)+ (3";
 // const code = "1(2+3)";
 const parsedTree = parse(code);
 console.log(parsedTree);
