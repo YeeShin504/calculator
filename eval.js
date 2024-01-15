@@ -1,7 +1,23 @@
 const assert = require('node:assert');
 
+const add = function (a, b) {
+    return a + b;
+};
+
+const subtract = function (a, b) {
+    return a - b;
+};
+
+const multiply = function (a, b) {
+    return a * b;
+};
+
+const divide = function (a, b) {
+    return a / b;
+};
+
 // Break the math expression into correct groups
-function tokenise(expr) {
+const tokenise = function (expr) {
     const regex = /[A-Za-z]+|([0-9]*[.])?[0-9]+|\S/g;
     let tokens = expr.match(regex);
     tokens = insertCloseBrackets(tokens);
@@ -9,22 +25,22 @@ function tokenise(expr) {
     return tokens;
 }
 
-function isFloat(token) {
+const isFloat = function (token) {
     const regex = /^([0-9]*[.])?[0-9]+$/g;
     return (token !== undefined) && (token.match(regex) !== null);
 }
 
-function isVar(token) {
+const isVar = function (token) {
     const regex = /^[A-Za-z]+$/g;
     return (token !== undefined) && (token.match(regex) !== null);
 }
 
-function isFloatOrVar(token) {
+const isFloatOrVar = function (token) {
     return (isFloat(token) || isVar(token));
 }
 
 // Insert '*' token for implicit multiplication
-function insertImpliedMul(tokens) {
+const insertImpliedMul = function (tokens) {
     let updatedTokens = [];
     for (let i = 0; i < tokens.length - 1; i++) {
         let current = tokens[i];
@@ -46,7 +62,7 @@ function insertImpliedMul(tokens) {
     return updatedTokens;
 }
 
-function insertCloseBrackets(tokens) {
+const insertCloseBrackets = function (tokens) {
     let openCount = 0;
     tokens.forEach(token => {
         if (token === '(') {
@@ -65,30 +81,29 @@ function insertCloseBrackets(tokens) {
     return tokens;
 }
 
-function parse(code) {
+const parse = function (code) {
     let tokens = tokenise(code);
-    console.log(tokens);
     let position = 0;
 
     // Get the next token without moving position
-    function peekNext() {
+    const peekNext = function () {
         return tokens[position];
     }
 
     // Move position 1 token ahead safely (ie skip 1 ahead)
-    function consume(token) {
+    const consume = function (token) {
         // Ensure token consumed is expected (e.g. close brackets in PrimaryExpr)
         assert.strictEqual(token, tokens[position]);
         position++;
     }
 
     // PrimaryExpr should be a float, variable or brackets, as matched above
-    function parsePrimaryExpr() {
+    const parsePrimaryExpr = function () {
         let t = peekNext();
 
         if (isFloat(t)) {
             consume(t);
-            return { type: "Float", value: t };
+            return { type: "Float", value: parseFloat(t) };
         } else if (t === '+' || t === '-') {
             // Parse expressions prefix with + or -
             let expr = parseUnaryExpr();
@@ -111,7 +126,7 @@ function parse(code) {
     }
 
     // UnaryExpr parses (+- PrimaryExpr)
-    function parseUnaryExpr() {
+    const parseUnaryExpr = function () {
         // let expr = parsePrimaryExpr();
         let negateCount = 0;
         let t = peekNext();
@@ -123,18 +138,25 @@ function parse(code) {
         }
         const sign = ((negateCount % 2) === 0) ? 1 : -1;
         let expr = parsePrimaryExpr();
-        return { sign, expr }
+        let value = multiply(sign, expr.value);
+        return { sign, expr, value }
     }
 
     // MulExpr parses (PrimaryExpr */ PrimaryExpr)
-    function parseMulExpr() {
+    const parseMulExpr = function () {
         let expr = parsePrimaryExpr();
         let t = peekNext();
         // while allows chaining (expr * expr * expr ...)
         while (t === '*' || t === '/') {
             consume(t);
             let rhs = parsePrimaryExpr();
-            expr = { type: t, left: expr, right: rhs };
+            let value = 0;
+            if (t === '*') {
+                value = multiply(expr.value, rhs.value);
+            } else {
+                value = divide(expr.value, rhs.value);
+            }
+            expr = { type: t, left: expr, right: rhs, value };
             t = peekNext();
         }
         return expr;
@@ -142,14 +164,20 @@ function parse(code) {
 
     // AddExpr parses (MulExpr +- MulExpr)
     // AddExpr takes in MulExpr as it has lower precedence due to PEMDAS
-    function parseAddExpr() {
+    const parseAddExpr = function () {
         let expr = parseMulExpr();
         let t = peekNext();
         // while allows chaining (expr + expr + expr ...)
         while (t === '+' || t === '-') {
             consume(t);
             let rhs = parseMulExpr();
-            expr = { type: t, left: expr, right: rhs };
+            let value = 0;
+            if (t === '+') {
+                value = add(expr.value, rhs.value);
+            } else {
+                value = subtract(expr.value, rhs.value);
+            }
+            expr = { type: t, left: expr, right: rhs, value };
             t = peekNext();
         }
         return expr;
@@ -163,7 +191,6 @@ function parse(code) {
     return result;
 }
 
-const code = "1(2)+ (3";
-// const code = "1(2+3)";
-const parsedTree = parse(code);
-console.log(parsedTree);
+// const code = "6/2(1+2)";
+// const parsedTree = parse(code);
+// console.log(parsedTree);
