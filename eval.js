@@ -1,4 +1,4 @@
-const assert = require('node:assert');
+// const assert = require('node:assert');
 
 const add = function (a, b) {
     return a + b;
@@ -19,9 +19,8 @@ const divide = function (a, b) {
 // Break the math expression into correct groups
 const tokenise = function (expr) {
     const regex = /[A-Za-z]+|([0-9]*[.])?[0-9]+|\S/g;
-    let tokens = expr.match(regex);
-    tokens = insertCloseBrackets(tokens);
-    tokens = insertImpliedMul(tokens);
+    // If expr.match return null, return empty array instead
+    let tokens = (expr.match(regex) || []);
     return tokens;
 }
 
@@ -39,48 +38,6 @@ const isFloatOrVar = function (token) {
     return (isFloat(token) || isVar(token));
 }
 
-// Insert '*' token for implicit multiplication
-const insertImpliedMul = function (tokens) {
-    let updatedTokens = [];
-    for (let i = 0; i < tokens.length - 1; i++) {
-        let current = tokens[i];
-        let next = tokens[i + 1];
-        updatedTokens.push(current);
-
-        if (isFloatOrVar(current) && next === '(') {
-            updatedTokens.push('*');
-        }
-        if (current === ')' && isFloatOrVar(next)) {
-            updatedTokens.push('*');
-        }
-        if (current === ')' && next === '(') {
-            updatedTokens.push('*');
-        }
-    }
-    // Unable to loop last token as i+1 will be out of range
-    updatedTokens.push(tokens.pop());
-    return updatedTokens;
-}
-
-const insertCloseBrackets = function (tokens) {
-    let openCount = 0;
-    tokens.forEach(token => {
-        if (token === '(') {
-            openCount++;
-        } else if (token === ')') {
-            openCount--;
-        }
-    });
-    if (openCount < 0) {
-        throw new SyntaxError("Missing open brackets");
-    }
-    while (openCount > 0) {
-        tokens.push(')');
-        openCount--;
-    }
-    return tokens;
-}
-
 const parse = function (code) {
     let tokens = tokenise(code);
     let position = 0;
@@ -93,7 +50,7 @@ const parse = function (code) {
     // Move position 1 token ahead safely (ie skip 1 ahead)
     const consume = function (token) {
         // Ensure token consumed is expected (e.g. close brackets in PrimaryExpr)
-        assert.strictEqual(token, tokens[position]);
+        // assert.strictEqual(token, tokens[position]);
         position++;
     }
 
@@ -109,6 +66,7 @@ const parse = function (code) {
             let expr = parseUnaryExpr();
             return expr;
         } else if (isVar(t)) {
+            // Var is implemented but not in use in this calculator
             consume(t);
             return { type: "Variable", id: t };
         } else if (t === '(') {
@@ -194,3 +152,4 @@ const parse = function (code) {
 // const code = "6/2(1+2)";
 // const parsedTree = parse(code);
 // console.log(parsedTree);
+export {tokenise, isFloat, isFloatOrVar, parse}
