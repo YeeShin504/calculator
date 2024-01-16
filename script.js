@@ -22,7 +22,7 @@ const mulBtns = document.querySelectorAll('#multiply, #divide, #percent');
 mulBtns.forEach(button => {
     button.addEventListener('click', () => {
         const tokens = tokenise(displayInfo.input);
-        console.log({tokens})
+        console.log({ tokens })
         if (tokens.length === 0) {
             // They should not be the first symbol 
             return; // Nothing changed, no need updateDisplay()
@@ -44,7 +44,10 @@ decimalBtn.addEventListener('click', () => {
         return updateDisplay();
     }
     const lastToken = tokens.pop();
-    if (!isFloat(lastToken)) {
+    if (lastToken === '.') {
+        // Do not repeate decimal point
+        return updateDisplay();
+    } else if (!isFloat(lastToken)) {
         // Allow implicit decimal, ie .1=0.1
         displayInfo.input += decimalBtn.textContent;
     } else if (isFloat(lastToken) && !lastToken.includes('.')) {
@@ -108,17 +111,18 @@ equalBtn.addEventListener('click', () => {
 })
 
 const updateDisplay = function () {
-    const inputDisp = document.querySelector('div#input');
+    const inputDisp = document.querySelector('#input');
     inputDisp.textContent = displayInfo.input;
     if (displayInfo.input.length === 0) {
         displayInfo.ans = ""
     } else {
-    // If the new input is malformed and 
-    // raises an exception, do not update the ans
+        // If the new input is malformed and 
+        // raises an exception, do not update the ans
         try {
             const input = sanitiseInput(displayInfo.input);
+            const tokens = tokenise(input)
             console.table(displayInfo);
-            console.log({input});
+            console.log({ input, tokens });
             const parsedTree = parse(input);
             if (parsedTree.value !== undefined) {
                 displayInfo.ans = parsedTree.value.toString();
@@ -135,8 +139,10 @@ const sanitiseInput = function () {
     let input = displayInfo.input;
     // Replace input symbols for parsing
     input = input.replaceAll('x', '*')
-                 .replaceAll('÷', '/')
-                 .replaceAll('%', '/100');
+        .replaceAll('÷', '/')
+        .replaceAll('%', '/100')
+        .replaceAll('&lrm;', '');
+    // &lrm; is inserted to some chr for correct rtl format
     input = insertCloseBrackets(input);
     input = insertImpliedMul(input);
     return input;
