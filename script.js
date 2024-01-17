@@ -1,12 +1,28 @@
-import { tokenise, isFloat, isFloatOrVar, parse } from './eval.js';
+import { tokenise, isFloat, isFloatOrVar, isOpr, parse } from './eval.js';
 
-const isOpr = function (chr) {
-    return "+-x÷".includes(chr);
+const maintainAspectRatio = function () {
+    const calculator = document.getElementById('calculator');
+    const aspectRatio = 2 / 3;
+    // offset width and height in px to remove scrollbar
+    const offset = 30;
+    // width and height in px
+    const width = window.innerWidth - offset;
+    const height = window.innerHeight - offset;
+    if (width / height <= aspectRatio) {
+        calculator.style.width = width.toString() + 'px';
+        calculator.style.height = (width / aspectRatio).toString() + 'px';
+    } else {
+        calculator.style.height = height.toString() + 'px';
+        calculator.style.width = (height * aspectRatio).toString() + 'px';
+    }
+    updateDisplay();
 }
+window.addEventListener('resize', () => { maintainAspectRatio(); })
+// maintainAspectRatio();
 
 let displayInfo = {
     input: "",
-    ans: "",
+    ans: 0,
     bracketCount: 0
 };
 
@@ -81,7 +97,7 @@ bracketBtn.addEventListener('click', () => {
 const clearBtn = document.querySelector('#ac');
 clearBtn.addEventListener('click', () => {
     displayInfo.input = "";
-    displayInfo.ans = "";
+    displayInfo.ans = 0;
     displayInfo.bracketCount = 0;
     updateDisplay();
 })
@@ -112,27 +128,26 @@ equalBtn.addEventListener('click', () => {
 
 const updateDisplay = function () {
     const inputDisp = document.querySelector('#input');
-    inputDisp.textContent = displayInfo.input;
-    if (displayInfo.input.length === 0) {
-        displayInfo.ans = ""
-    } else {
-        // If the new input is malformed and 
-        // raises an exception, do not update the ans
-        try {
-            const input = sanitiseInput(displayInfo.input);
-            const tokens = tokenise(input)
-            console.table(displayInfo);
-            console.log({ input, tokens });
-            const parsedTree = parse(input);
-            if (parsedTree.value !== undefined) {
-                displayInfo.ans = parsedTree.value.toString();
-            }
-        } catch (err) {
-            // displayInfo.ans = err.message;
-        }
-    }
+    inputDisp.textContent = insertCommas(displayInfo.input);
     const ansDisp = document.querySelector('#ans');
-    ansDisp.textContent = displayInfo.ans;
+    if (displayInfo.input.length === 0) {
+        return ansDisp.textContent = "";
+    }
+    // If the new input is malformed and 
+    // raises an exception, do not update the ans
+    try {
+        const input = sanitiseInput(displayInfo.input);
+        const tokens = tokenise(input)
+        console.table(displayInfo);
+        console.log({ input, tokens });
+        const parsedTree = parse(input);
+        if (parsedTree.value !== undefined) {
+            displayInfo.ans = parsedTree.value;
+        }
+    } catch (err) {
+        // displayInfo.ans = err.message;
+    }
+    resizeOutput(displayInfo.ans, ansDisp);
 };
 
 const sanitiseInput = function () {
@@ -141,8 +156,6 @@ const sanitiseInput = function () {
     input = input.replaceAll('x', '*')
         .replaceAll('÷', '/')
         .replaceAll('%', '/100')
-        .replaceAll('&lrm;', '');
-    // &lrm; is inserted to some chr for correct rtl format
     input = insertCloseBrackets(input);
     input = insertImpliedMul(input);
     return input;
@@ -180,3 +193,36 @@ const insertCloseBrackets = function (input) {
     input += closing;
     return input;
 }
+
+const insertCommas = function (input) {
+    // Add commas to format numbers
+    let outputString = "";
+    const tokens = tokenise(input);
+    tokens.forEach((token) => {
+        if (isFloat(token) && parseFloat(token) >= 1000) {
+            const subString = parseFloat(token).toLocaleString();
+            outputString += subString;
+        } else {
+            outputString += token;
+        }
+    });
+    return outputString;
+}
+
+const resizeOutput = function (ans, ansDisp) {
+    // Ans is resized so it does not exceed the display
+    // Original ans is still stored in displayInfo
+    let sigFig = 21;
+    ansDisp.textContent = ans.toLocaleString("en-US", { maximumSignificantDigits: sigFig });
+    while (isOverflow(ansDisp)) {
+        sigFig--;
+        // Attempt to display ans in scientific notation with as many sf as possible
+        ansDisp.textContent = ans.toExponential(sigFig);
+    }
+}
+
+const isOverflow = function (element) {
+    return (element.scrollWidth > element.clientWidth);
+}
+
+updateDisplay();

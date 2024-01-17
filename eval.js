@@ -38,6 +38,10 @@ const isFloatOrVar = function (token) {
     return (isFloat(token) || isVar(token));
 }
 
+const isOpr = function (chr) {
+    return "+-x÷".includes(chr);
+}
+
 const parse = function (code) {
     let tokens = tokenise(code);
     let position = 0;
@@ -152,4 +156,4 @@ const parse = function (code) {
 // const code = "6/2(1+2)";
 // const parsedTree = parse(code);
 // console.log(parsedTree);
-export {tokenise, isFloat, isFloatOrVar, parse}
+export {tokenise, isFloat, isFloatOrVar, isOpr, parse}

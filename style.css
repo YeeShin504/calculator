@@ -3,7 +3,11 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
+}
 
+button,
+.display {
+    font-size: 8vmin;
 }
 
 .container {
@@ -12,8 +16,10 @@
     justify-content: center;
     align-items: center;
 
-    width: auto;
-    aspect-ratio: 2/3;
+    /* width: auto; */
+    /* width: 100vmin; 
+    /* height: 100vmax; */
+    /* aspect-ratio: 2/3; */
     margin: auto;
     padding: 0.5em;
     border: solid black .01em;
@@ -30,14 +36,12 @@
 }
 
 .display {
-    flex-grow: 1;
     width: 95%;
-    aspect-ratio: 20 / 1;
+    min-height: 20%;
     border-radius: 5%;
     padding: 0.2em;
     background-color: lightgray;
     font-family: monospace;
-    font-size: 10cqw;
 }
 
 /* Allow input to overflow on the left without complications */
@@ -82,15 +86,26 @@ button {
     border-radius: 30%;
     border-style: hidden;
     text-align: center;
-    font-size: 10cqw;
+}
+
+button:active {
+    background-color: gray;
 }
 
 #ac {
     background-color: lightpink;
 }
 
+#ac:active {
+    background-color: pink;
+}
+
 #equal {
     background-color: lightgreen;
+}
+
+#equal:active {
+    background-color: green;
 }
 
 .number,
