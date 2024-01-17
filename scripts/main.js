@@ -18,7 +18,7 @@ const maintainAspectRatio = function () {
     updateDisplay();
 }
 window.addEventListener('resize', () => { maintainAspectRatio(); })
-// maintainAspectRatio();
+maintainAspectRatio();
 
 let displayInfo = {
     input: "",
