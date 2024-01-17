@@ -1,4 +1,4 @@
-import { tokenise, isFloat, isFloatOrVar, isOpr, parse } from './eval.js';
+import { tokenise, isFloat, isFloatOrVar, isOpr, parse } from './parse.js';
 
 const maintainAspectRatio = function () {
     const calculator = document.getElementById('calculator');
