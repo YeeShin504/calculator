@@ -1,5 +1,19 @@
 import { tokenise, isFloat, isFloatOrVar, isOpr, parse } from './parse.js';
 
+window.addEventListener('keydown', function (e) {
+    let button;
+    // Brackets is different because both key press the same button
+    if (e.key.includes("()")) {
+        button = document.querySelector('button[key=()]');
+    } else {
+        button = document.querySelector(`button[key='${e.key}']`);
+    }
+    // Check if valid button is pressed and assigned
+    if (button !== null) {
+        button.click();
+    }
+});
+
 const maintainAspectRatio = function () {
     const calculator = document.getElementById('calculator');
     const aspectRatio = 2 / 3;
@@ -18,7 +32,6 @@ const maintainAspectRatio = function () {
     updateDisplay();
 }
 window.addEventListener('resize', () => { maintainAspectRatio(); })
-maintainAspectRatio();
 
 let displayInfo = {
     input: "",
@@ -117,13 +130,18 @@ delBtn.addEventListener('click', () => {
 
 const equalBtn = document.querySelector('#equal');
 equalBtn.addEventListener('click', () => {
-    const ans = displayInfo.ans;
-    if (isFloat(ans)) {
-        displayInfo.input = ans;
-    } else {
-        displayInfo.ans = "Incorrect Format!";
+    const ansDisp = document.querySelector('#ans');
+    try {
+        const ans = calcAns();
+        if (ans !== null || isFinite(ans)) {
+            displayInfo.input = ans.toString();
+            return updateDisplay();
+        } else {
+            ansDisp.textContent = "Incorrect Expression!";
+        }
+    } catch (err) {
+        ansDisp.textContent = err.message;
     }
-    updateDisplay();
 })
 
 const updateDisplay = function () {
@@ -136,19 +154,29 @@ const updateDisplay = function () {
     // If the new input is malformed and 
     // raises an exception, do not update the ans
     try {
-        const input = sanitiseInput(displayInfo.input);
-        const tokens = tokenise(input)
-        console.table(displayInfo);
-        console.log({ input, tokens });
-        const parsedTree = parse(input);
-        if (parsedTree.value !== undefined) {
-            displayInfo.ans = parsedTree.value;
-        }
+        const ans = calcAns();
+        console.log({ ans })
+        resizeOutput(ans, ansDisp);
+        displayInfo.ans = ans;
     } catch (err) {
-        // displayInfo.ans = err.message;
+        console.log(err.message);
+        resizeOutput(displayInfo.ans, ansDisp);
     }
-    resizeOutput(displayInfo.ans, ansDisp);
 };
+
+const calcAns = function () {
+    const input = sanitiseInput(displayInfo.input);
+    const tokens = tokenise(input);
+    const parsedTree = parse(input);
+    const ans = parsedTree.value
+    // console.table(displayInfo);
+    // console.log({ input, tokens });
+    if (ans !== undefined || !ans.isNan()) {
+        return parsedTree.value;
+    } else {
+        return null;
+    }
+}
 
 const sanitiseInput = function () {
     let input = displayInfo.input;
@@ -218,6 +246,8 @@ const resizeOutput = function (ans, ansDisp) {
         sigFig--;
         // Attempt to display ans in scientific notation with as many sf as possible
         ansDisp.textContent = ans.toExponential(sigFig);
+        const txt = ansDisp.textContent;
+        console.log({ txt });
     }
 }
 
@@ -225,4 +255,4 @@ const isOverflow = function (element) {
     return (element.scrollWidth > element.clientWidth);
 }
 
-updateDisplay();
+maintainAspectRatio();

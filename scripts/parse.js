@@ -13,6 +13,9 @@ const multiply = function (a, b) {
 };
 
 const divide = function (a, b) {
+    if (b === 0) {
+        throw new EvalError("Division by 0")
+    }
     return a / b;
 };
 
@@ -156,4 +159,4 @@ const parse = function (code) {
 // const code = "6/2(1+2)";
 // const parsedTree = parse(code);
 // console.log(parsedTree);
-export {tokenise, isFloat, isFloatOrVar, isOpr, parse}
+export { tokenise, isFloat, isFloatOrVar, isOpr, parse }
