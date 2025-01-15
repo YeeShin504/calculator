@@ -1,11 +1,6 @@
 # Calculator
-<<<<<<< HEAD
+This is a simple calculator implemented in Javascript. A simple parser is created in `parse.js` to evaluate the input expression correctly.
 
-This contains a simple calculator implemented in Javascript. A simple parser is created in parse.js to evaluate the input expression correctly.
-
-=======
-This is a simple calculator implemented in Javascript. A simple parser is created in parse.js to evaluate the input expression correctly.
->>>>>>> 0166702c4e25aeedc52e6be3376b67dea32c13d6
 ## Features:
 
 1. Basic mathematical operations
